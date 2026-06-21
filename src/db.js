@@ -1,5 +1,6 @@
 const { MongoClient } = require('mongodb');
 
+// 优先使用 MONGODB_URI 环境变量，其次使用 MONGO_URL，最后使用本地默认配置
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || 'mongodb://localhost:27017/exam_db';
 const DB_NAME = process.env.MONGODB_DB || 'exam_db';
 
@@ -8,9 +9,16 @@ let db = null;
 
 async function connect() {
   if (!client) {
-    client = new MongoClient(MONGODB_URI);
-    await client.connect();
-    db = client.db(DB_NAME);
+    try {
+      console.log('📡 正在连接 MongoDB...');
+      client = new MongoClient(MONGODB_URI);
+      await client.connect();
+      db = client.db(DB_NAME);
+      console.log('✅ MongoDB 连接成功');
+    } catch (error) {
+      console.error('❌ MongoDB 连接失败:', error.message);
+      throw error;
+    }
   }
   return db;
 }
