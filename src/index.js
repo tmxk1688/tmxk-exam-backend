@@ -10,6 +10,8 @@ const examRoutes = require('./routes/exam');
 const { buildExamRouter, buildAdminRouter } = require('./routes/practical');
 const { attachProctoring } = require('./proctoring');
 const { MATERIALS_DIR, ensureMaterialsDir } = require('./utils/materials');
+const db = require('./db');
+const { initQuestionBank } = require('./utils/questionBank');
 
 ensureMaterialsDir();
 
@@ -69,15 +71,25 @@ server.on('error', (err) => {
   process.exit(1);
 });
 
-server.listen(PORT, () => {
-  // MONGODB_URI 环境变量检查
-  if (!process.env.MONGODB_URI) {
-    console.warn('\n⚠️  警告: MONGODB_URI 环境变量未配置，数据库连接可能失败。\n');
+(async () => {
+  try {
+    await db.connect();
+    await initQuestionBank();
+
+    server.listen(PORT, () => {
+      // MONGODB_URI 环境变量检查
+      if (!process.env.MONGODB_URI) {
+        console.warn('\n⚠️  警告: MONGODB_URI 环境变量未配置，数据库连接可能失败。\n');
+      }
+      console.log(`\n🚀 天马行空AIGC考试云系统后端已启动`);
+      console.log(`   地址: http://localhost:${PORT}`);
+      console.log(`   实时监考: WebSocket 已启用`);
+      console.log(`   管理端默认账号: admin / admin123\n`);
+    });
+  } catch (err) {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
   }
-  console.log(`\n🚀 天马行空AIGC考试云系统后端已启动`);
-  console.log(`   地址: http://localhost:${PORT}`);
-  console.log(`   实时监考: WebSocket 已启用`);
-  console.log(`   管理端默认账号: admin / admin123\n`);
-});
+})();
 
 module.exports = { app, server, io };
