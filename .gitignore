@@ -3,6 +3,8 @@ node_modules/
 
 # Environment
 .env
+.env.local
+.env.*.local
 
 # Uploads (本地文件上传，生产环境用 Cloudinary)
 uploads/
@@ -15,7 +17,14 @@ npm-debug.log*
 # IDE
 .idea/
 .vscode/
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Build
+dist/
+build/
