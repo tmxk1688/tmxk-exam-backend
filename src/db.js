@@ -1,7 +1,11 @@
 const { MongoClient } = require('mongodb');
 
-// 优先使用 MONGODB_URI 环境变量，其次使用 MONGO_URL，最后使用本地默认配置
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || 'mongodb://localhost:27017/exam_db';
+// 优先使用 MONGODB_URI，其次 MONGO_URL，最后本地默认
+// Railway 会自动提供这些环境变量
+const MONGODB_URI = process.env.MONGODB_URI 
+  || process.env.MONGO_URL 
+  || 'mongodb://localhost:27017/exam_db';
+  
 const DB_NAME = process.env.MONGODB_DB || 'exam_db';
 
 let client = null;
@@ -11,12 +15,27 @@ async function connect() {
   if (!client) {
     try {
       console.log('📡 正在连接 MongoDB...');
-      client = new MongoClient(MONGODB_URI);
+      console.log('📍 连接地址:', MONGODB_URI.replace(/:[^:@]*@/, ':****@')); // 隐藏密码显示
+      
+      client = new MongoClient(MONGODB_URI, {
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 5000,
+      });
+      
       await client.connect();
       db = client.db(DB_NAME);
-      console.log('✅ MongoDB 连接成功');
+      
+      // 验证连接
+      await db.admin().ping();
+      console.log('✅ MongoDB 连接成功！');
+      console.log('📊 数据库名称:', DB_NAME);
     } catch (error) {
-      console.error('❌ MongoDB 连接失败:', error.message);
+      console.error('❌ MongoDB 连接失败');
+      console.error('错误信息:', error.message);
+      console.error('请检查以下事项:');
+      console.error('1. MONGODB_URI 环境变量是否正确设置');
+      console.error('2. MongoDB 服务是否正常运行');
+      console.error('3. 网络连接是否正常');
       throw error;
     }
   }
